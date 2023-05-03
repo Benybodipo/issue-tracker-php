@@ -12,16 +12,27 @@ if (!isset($_GET['code'])) {
 
 // If we have an authorization code, exchange it for an access token
 $code = $_GET['code'];
-$url = "https://github.com/login/oauth/access_token?client_id=".CLIENT_ID."&client_secret=".CLIENT_SECRET."&code=$code&redirect_uri=".REDIRECT_URI;
-$ch = curl_init($url);
+$data = array(
+  'client_id' => CLIENT_ID,
+  'client_secret' => CLIENT_SECRET,
+  'code' => $_GET['code'],
+  'redirect_uri' => REDIRECT_URI
+);
+// Send a POST request to the access token endpoint
+$ch = curl_init('https://github.com/login/oauth/access_token');
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
 curl_setopt($ch, CURLOPT_HTTPHEADER, array('Accept: application/json'));
-$response = curl_exec($ch);
+$result = curl_exec($ch);
 curl_close($ch);
-$data = json_decode($response, true);
-$_SESSION['access_token'] = $data['access_token'];
 
+// Parse the JSON response to extract the access token
+$response = json_decode($result);
+$access_token = $response->access_token;
+
+$_SESSION['access_token'] = $response->access_token;
+// echo $access_token;
+// exit;
 // Redirect the user to the index page
 header("Location: index.php");
 exit;
